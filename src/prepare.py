@@ -80,8 +80,8 @@ def read_image_files(folder_path: Path, class_name: str, raw_images: dict):
     return corrupted_files, duplicate_files
 
 
-ai_art_data_path = Path("./data/raw/AiArtData")
-real_art_data_path = Path("./data/raw/RealArt")
+ai_art_data_path = Path("../data/raw/AiArtData")
+real_art_data_path = Path("../data/raw/RealArt")
 
 raw_data = {
     "class": [],

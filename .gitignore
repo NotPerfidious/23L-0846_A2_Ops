@@ -1,1 +1,9 @@
 env_visionguard/
+env_visionguard_wsl/
+mlruns/
+mlflow.db
+*.keras
+.env
+__pycache__/
+toy_tuning/
+tuning_dir/
