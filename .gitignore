@@ -7,3 +7,4 @@ mlflow.db
 __pycache__/
 toy_tuning/
 tuning_dir/
+*.csv
