@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionGuard AI Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <nav class="bg-white shadow-sm py-4">
+        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-tight text-indigo-600">VisionGuard</h1>
+            <div class="space-x-4">
+                <a href="/" class="text-sm font-medium text-gray-600 hover:text-indigo-600">Upload</a>
+                <a href="/history" class="text-sm font-medium text-gray-600 hover:text-indigo-600">History</a>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl shadow-xl w-full {% block card_width %}max-w-lg{% endblock %} p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+
+</html>

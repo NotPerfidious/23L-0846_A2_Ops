@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center">
+    <h2 class="text-2xl font-bold mb-4">Analysis Complete</h2>
+    <div
+        class="mb-6 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex justify-center items-center h-64">
+        <!-- Render image from memory buffer without saving to disk -->
+        <img src="{{ image_data }}" alt="Uploaded Image" class="max-h-full object-contain">
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+        <p class="text-sm text-gray-500 mb-1">File: {{ filename }}</p>
+        <p
+            class="text-3xl font-black {% if result.label == 'AI Art' %}text-red-600{% else %}text-emerald-600{% endif %}">
+            {{ result.label }}
+        </p>
+        <p class="text-md font-medium text-gray-700 mt-1">Confidence: {{ result.confidence }}%</p>
+    </div>
+
+    <a href="/"
+        class="block w-full bg-gray-900 text-white font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors text-center">Analyze
+        Another Image</a>
+</div>
+{% endblock %}

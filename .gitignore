@@ -8,3 +8,4 @@ __pycache__/
 toy_tuning/
 tuning_dir/
 *.csv
+*.db
