@@ -1,9 +1,11 @@
 import os
 import base64
-import sqlite3
 from flask import Flask, request, render_template, jsonify
 from werkzeug.utils import secure_filename
 from src.inference import predict_image_bytes
+import psycopg2
+from psycopg2.extras import DictCursor
+
 
 app = Flask(__name__, template_folder="./templates")
 
@@ -20,15 +22,15 @@ def allowed_file(filename):
 
 # Initialize Database with the new "model_name" column for Task 5
 def init_db():
-    conn = sqlite3.connect(DATABASE_ADDRESS)
+    conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
     c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS history
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute('''CREATE TABLE IF NOT EXISTS history
+                 (id SERIAL PRIMARY KEY,
                   filename TEXT,
                   label TEXT,
                   confidence REAL,
                   model_name TEXT,
-                  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""")
+                  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
     conn.close()
 
@@ -70,12 +72,10 @@ def process_upload():
         result = predict_image_bytes(file_bytes)
 
         # Save to Database including the model_name
-        conn = sqlite3.connect(DATABASE_ADDRESS)
+        conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
         c = conn.cursor()
-        c.execute(
-            "INSERT INTO history (filename, label, confidence, model_name) VALUES (?, ?, ?, ?)",
-            (filename, result["label"], result["confidence"], MODEL_PATH),
-        )
+        c.execute("INSERT INTO history (filename, label, confidence, model_name) VALUES (%s, %s, %s, %s)",
+                  (filename, result['label'], result['confidence'], MODEL_PATH))
         conn.commit()
         conn.close()
 
@@ -100,9 +100,9 @@ def process_upload():
 @app.route("/history", methods=["GET"])
 def history_page():
     # Fetch from Database
-    conn = sqlite3.connect(DATABASE_ADDRESS)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+    conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
+
+    c = conn.cursor(cursor_factory=DictCursor)
     c.execute("SELECT * FROM history ORDER BY timestamp DESC LIMIT 50")
     records = c.fetchall()
     conn.close()
