@@ -1,0 +1,1 @@
+![VisionGuard CI](https://github.com/NotPerfidious/23L-0846_A2_Ops/actions/workflows/visionguard-ci.yml/badge.svg)
