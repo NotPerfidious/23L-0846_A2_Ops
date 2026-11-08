@@ -2,10 +2,12 @@ import os
 import base64
 from flask import Flask, request, render_template, jsonify
 from werkzeug.utils import secure_filename
-from src.inference import predict_image_bytes
+# from src.inference import predict_image_bytes
 import psycopg2
 from psycopg2.extras import DictCursor
+import requests
 
+AWS_MODEL_URL = "http://13.53.135.120:5000/predict"
 
 app = Flask(__name__, template_folder="./templates")
 
@@ -22,15 +24,15 @@ def allowed_file(filename):
 
 # Initialize Database with the new "model_name" column for Task 5
 def init_db():
-    conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
+    conn = psycopg2.connect(os.getenv("DATABASE_ADDRESS"))
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS history
+    c.execute("""CREATE TABLE IF NOT EXISTS history
                  (id SERIAL PRIMARY KEY,
                   filename TEXT,
                   label TEXT,
                   confidence REAL,
                   model_name TEXT,
-                  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+                  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
     conn.commit()
     conn.close()
 
@@ -69,16 +71,36 @@ def process_upload():
         return render_template("error.html", message="The uploaded file is empty."), 400
 
     try:
-        result = predict_image_bytes(file_bytes)
+        # result = predict_image_bytes(file_bytes)
+
+        files = {"file": (filename, file_bytes, file.mimetype)}
+        response = requests.post(AWS_MODEL_URL, files=files, timeout=30)
+
+        if response.status_code != 200:
+            return (
+                render_template("error.html", message="Cloud model inference failed."),
+                502,
+            )
+
+        result = response.json()
 
         # Save to Database including the model_name
-        conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
+        conn = psycopg2.connect(os.getenv("DATABASE_ADDRESS"))
         c = conn.cursor()
-        c.execute("INSERT INTO history (filename, label, confidence, model_name) VALUES (%s, %s, %s, %s)",
-                  (filename, result['label'], result['confidence'], MODEL_PATH))
+        c.execute(
+            "INSERT INTO history (filename, label, confidence, model_name) VALUES (%s, %s, %s, %s)",
+            (filename, result["label"], result["confidence"], MODEL_PATH),
+        )
         conn.commit()
         conn.close()
 
+    except requests.exceptions.RequestException:
+        return (
+            render_template(
+                "error.html", message="Could not connect to the cloud model server."
+            ),
+            503,
+        )
     except ValueError as e:
         return render_template("error.html", message=str(e)), 422
     except Exception as e:
@@ -100,7 +122,7 @@ def process_upload():
 @app.route("/history", methods=["GET"])
 def history_page():
     # Fetch from Database
-    conn = psycopg2.connect(os.getenv('DATABASE_ADDRESS'))
+    conn = psycopg2.connect(os.getenv("DATABASE_ADDRESS"))
 
     c = conn.cursor(cursor_factory=DictCursor)
     c.execute("SELECT * FROM history ORDER BY timestamp DESC LIMIT 50")
